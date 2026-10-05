@@ -1,0 +1,10 @@
+- Stack: TypeScript (Strict, no `any`), Next.js (App Router), Tailwind CSS, Supabase (Auth, Postgres, Storage), Claude API. See `ARCHITECTURE.md`.
+- Structure: Routes in `app/`, raw UI in `components/ui/`, feature components in `components/features/`, core logic in `lib/`, types in `types/`.
+- Localization: All UI text must be Traditional Chinese (zh-TW) with Taiwan phrasing (使用者 not 用戶, 牌組 not 卡組); code and commits in English.
+- Server Boundary: Claude API and Supabase service role key are server-only (`import "server-only"`); never expose them to Client Components.
+- Data Access: Enable RLS on every table; users may only read/write their own decks, cards, and reviews.
+- AI Output: Validate every Claude response with Zod (`lib/ai/schemas.ts`) before saving; AI results are drafts until the user confirms.
+- Logic & Testing: Keep UI presentational; SM-2 lives in `lib/srs/` as pure functions with Vitest tests; cover critical journeys with Playwright.
+- Verification: Run `npm run lint`, `npm run typecheck`, and `npm run test` before opening PRs.
+- Git Commits: Follow Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`); keep changes atomic.
+- Safety: Never commit API keys, `.env*` files, or run destructive git commands.
