@@ -1,27 +1,16 @@
 ---
 name: supabase-migration
-description: Add or change Supabase tables safely with a new SQL migration, RLS policies, and regenerated TypeScript types. Use whenever the database schema changes.
+description: Safely update the Supabase database schema with migrations, RLS policies, regenerated TypeScript types, and ownership tests.
 ---
 
-# Supabase Schema Change Workflow
+# Supabase Migration
 
-## Steps
-1. **Read first**
-   - Check the data model and RLS rules in `ARCHITECTURE.md` (section 3).
-2. **Write a new migration**
-   - Create a new file in `supabase/migrations/`. Never edit an existing migration.
-   - Every new table must have `alter table <name> enable row level security;`.
-3. **RLS policies (least privilege)**
-   - `decks`: owner when `user_id = auth.uid()`; read-only for signed-in users when `is_public = true`.
-   - `cards`: access follows the owning deck's `user_id`.
-   - `reviews`: users read/write only their own rows.
-   - Never write `using (true)` for write access.
-4. **Regenerate types**
-   - Run `npx supabase gen types typescript --local > types/database.ts`.
-   - Never edit `types/database.ts` by hand. Update domain types in `types/index.ts` if needed.
-5. **Test RLS**
-   - Add or update an integration test proving user A cannot read or modify user B's data.
+Whenever changing the database schema:
 
-## Done when
-- Migration applies cleanly on a local Supabase.
-- `npm run typecheck` passes with the new types.
+1. Add a new, timestamped SQL migration under `supabase/migrations/`. Do not edit an existing migration to change an already-applied schema.
+2. Enable row-level security (RLS) on every new table and define policies that enforce the intended access rules. Review affected existing tables and policies when the change alters data ownership or access.
+3. Regenerate `types/database.ts` using the repository's Supabase type-generation command. Do not hand-edit the generated file.
+4. Add or update tests that verify data isolation: user A must not be able to read user B's data. Use the project's local Supabase/test setup and ensure the test exercises the RLS policies.
+5. Run the relevant migration and tests, and report any checks that could not be completed.
+
+Do not consider a schema change complete until the migration, RLS policies, regenerated types, and user-isolation test are all in place.

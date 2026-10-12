@@ -1,26 +1,14 @@
 ---
 name: pr-preflight
-description: Check the diff for secrets and debug leftovers, write Conventional Commits, and draft the PR description. Use before pushing or opening a pull request.
+description: Check for debug logging and exposed API keys, validate Conventional Commit messages, and prepare a project-compliant pull request description.
 ---
 
-# PR Pre-flight Workflow
+# PR Preflight
 
-## Steps
-1. **Branch**
-   - Must be `feat/<summary>` or `fix/<summary>`. Never commit directly to `main`.
-2. **Clean the diff**
-   - Run `git status` and `git diff --staged`.
-   - Remove `console.log`, commented-out code, and temporary files.
-   - Make sure no `.env*` file, `ANTHROPIC_API_KEY`, or `SUPABASE_SERVICE_ROLE_KEY` value is staged.
-   - Confirm `lib/ai/` files and anything using the service role key start with `import "server-only"`.
-3. **UI text**
-   - New user-facing text is Traditional Chinese with Taiwan phrasing (使用者, 牌組).
-4. **Verify**
-   - Run the `qa-workflow` skill, or at least `npm run lint`, `npm run typecheck`, `npm run test`.
-5. **Commits**
-   - Conventional Commits, atomic changes, e.g. `feat(review): add SM-2 grading buttons`.
-6. **PR description**
-   - Summary of changes, linked issue (`Fixes #<n>`), and a checklist showing lint / typecheck / test results.
+Before opening a pull request:
 
-## Rules
-- Never run destructive git commands (`push --force`, `reset --hard`) without asking.
+1. Review the full branch diff for leftover `console.log` statements and exposed credentials or API keys. Check changed files and relevant repository history; do not print or copy secret values into reports. Remove debug logging and remediate any exposed secret before proceeding. Never commit API keys or `.env*` files.
+2. Check the commit messages in the branch against Conventional Commits (for example, `feat:`, `fix:`, `refactor:`, or `test:`). If any do not conform, report the specific messages and propose corrected messages; do not rewrite or amend commits unless explicitly requested.
+3. Draft a concise pull request description in English, following the repository's project rules: summarize the change, explain its impact, and list relevant verification. Report any required checks that were not run or did not pass; never claim they passed without evidence.
+
+Do not open the pull request while an unresolved exposed secret or debug log remains. Clearly report findings and any blocker.
