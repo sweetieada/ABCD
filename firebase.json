@@ -1,0 +1,31 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "MemoCard 智慧閃卡",
+        "supportEmail": "seoniiiiiada@gmail.com",
+        "authorizedRedirectUris": [
+          "https://uxd2026-memocard-2026-1102.firebaseapp.com/__/auth/handler",
+          "http://localhost"
+        ]
+      }
+    }
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "auth": {
+      "port": 9099
+    },
+    "singleProjectMode": true,
+    "ui": {
+      "enabled": true
+    }
+  }
+}
