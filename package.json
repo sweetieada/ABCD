@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run tests/schemas.test.ts",
     "test:all": "npx -y firebase-tools@latest --config firebase.test.json emulators:exec --project demo-memocard --only firestore \"vitest run\"",
-    "test:rules": "npx -y firebase-tools@latest --config firebase.test.json emulators:exec --project demo-memocard --only firestore \"vitest run tests/firestore.rules.test.ts\""
+    "test:rules": "npx -y firebase-tools@latest --config firebase.test.json emulators:exec --project demo-memocard --only firestore \"vitest run tests/firestore.rules.test.ts\"",
+    "test:e2e": "npx -y firebase-tools@latest --config firebase.test.json emulators:exec --project demo-memocard --only auth,firestore \"playwright test\""
   },
   "dependencies": {
     "firebase": "^12.13.0",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.0",
     "@firebase/rules-unit-testing": "^5.0.0",
+    "@playwright/test": "^1.65.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^20.19.0",
     "@types/react": "^19.2.0",

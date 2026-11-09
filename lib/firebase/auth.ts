@@ -8,7 +8,7 @@ import {
   updateProfile,
   type User,
 } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { z } from "zod";
 import { getFirebaseAuth, getFirestoreDb } from "@/lib/firebase/client";
 
@@ -37,7 +37,6 @@ export async function registerWithEmail(input: {
     parsed.data.password,
   );
   await updateProfile(user, { displayName: parsed.data.displayName });
-  await ensureUserProfile(user);
 }
 
 export async function signInWithEmail(input: { email: string; password: string }) {
@@ -52,8 +51,7 @@ export async function signInWithEmail(input: { email: string; password: string }
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
-  const { user } = await signInWithPopup(getFirebaseAuth(), provider);
-  await ensureUserProfile(user);
+  await signInWithPopup(getFirebaseAuth(), provider);
 }
 
 export async function requestPasswordReset(email: string) {
@@ -70,22 +68,25 @@ export async function signOutUser() {
 }
 
 export async function ensureUserProfile(user: User) {
-  const profileRef = doc(getFirestoreDb(), "users", user.uid);
-  const profile = await getDoc(profileRef);
+  const database = getFirestoreDb();
+  const profileRef = doc(database, "users", user.uid);
   const displayName = user.displayName?.trim() || "學習者";
 
-  if (profile.exists()) {
-    await updateDoc(profileRef, {
+  await runTransaction(database, async (transaction) => {
+    const profile = await transaction.get(profileRef);
+    if (profile.exists()) {
+      transaction.update(profileRef, {
+        displayName,
+        updatedAt: serverTimestamp(),
+      });
+      return;
+    }
+
+    transaction.set(profileRef, {
       displayName,
+      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    return;
-  }
-
-  await setDoc(profileRef, {
-    displayName,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
   });
 }
 
@@ -106,9 +107,12 @@ export function getFirebaseAuthErrorMessage(error: unknown) {
     "auth/operation-not-allowed": "此登入方式尚未在 Firebase 專案中啟用。",
     "auth/popup-blocked": "瀏覽器封鎖了登入視窗，請允許彈出式視窗後再試。",
     "auth/popup-closed-by-user": "登入視窗已關閉，尚未完成登入。",
+    "auth/user-not-found": "電子郵件或密碼不正確。",
     "auth/unauthorized-domain": "目前網站網域尚未加入 Firebase 授權網域。",
     "auth/weak-password": "密碼強度不足，請使用至少 8 個字元。",
+    "permission-denied": "資料存取遭拒，請確認 Firestore 安全規則已部署。",
     "firestore/permission-denied": "資料存取遭拒，請確認 Firestore 安全規則已部署。",
+    unavailable: "目前無法連線到資料庫，請稍後再試。",
     "firestore/unavailable": "目前無法連線到資料庫，請稍後再試。",
   };
 

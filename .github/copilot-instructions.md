@@ -5,6 +5,6 @@
 - Data Access: Enable Firestore Security Rules with default deny; users may only read/write their own profiles, decks, cards, and reviews.
 - AI Output: Validate every Claude response with Zod (`lib/ai/schemas.ts`) before saving; AI results are drafts until the user confirms.
 - Logic & Testing: Keep UI presentational; SM-2 lives in `lib/srs/` as pure functions with Vitest tests; cover critical journeys with Playwright.
-- Verification: Run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run test:rules` before opening PRs.
+- Verification: Run `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:rules`, and `npm run test:e2e` before opening PRs.
 - Git Commits: Follow Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`); keep changes atomic.
 - Safety: Never commit API keys, `.env*` files, or run destructive git commands.

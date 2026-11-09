@@ -191,4 +191,5 @@ Query cards where due_at <= now() → show front → flip
 | `npm run test` | Run schema unit tests without the emulator |
 | `npm run test:all` | Run all tests with the Firestore Emulator |
 | `npm run test:rules` | Run Firestore Security Rules tests in the emulator |
+| `npm run test:e2e` | Run Playwright authentication and deck-management journeys against emulators |
 | `npm run firebase:emulators` | Start local Firebase Authentication and Firestore emulators |

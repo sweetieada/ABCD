@@ -1,4 +1,8 @@
 .next/
+.next-e2e/
+playwright-report/
+test-results/
+.e2e-source-backup.json
 node_modules/
 out/
 coverage/
