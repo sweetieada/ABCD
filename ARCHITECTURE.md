@@ -188,7 +188,7 @@ Query cards where due_at <= now() → show front → flip
 | `npm run dev` | Start the dev server |
 | `npm run lint` | ESLint check |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run test` | Vitest unit tests |
-| `npm run test:e2e` | Playwright E2E tests |
+| `npm run test` | Run all tests with the Firestore Emulator |
+| `npm run test:unit` | Run schema unit tests without the emulator |
 | `npm run test:rules` | Run Firestore Security Rules tests in the emulator |
 | `npm run firebase:emulators` | Start local Firebase Authentication and Firestore emulators |
