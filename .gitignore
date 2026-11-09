@@ -1,0 +1,15 @@
+.next/
+.next-e2e/
+playwright-report/
+test-results/
+.e2e-source-backup.json
+node_modules/
+out/
+coverage/
+*.tsbuildinfo
+.firebase-data/*
+!.firebase-data/.gitkeep
+.env*
+!.env.example
+firebase-debug.log
+firestore-debug.log

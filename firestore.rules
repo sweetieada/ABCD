@@ -1,0 +1,161 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Assumed data model:
+    // users/{uid}: displayName, createdAt, updatedAt.
+    // users/{uid}/decks/{deckId}: name, description, deleting, createdAt, updatedAt.
+    // users/{uid}/decks/{deckId}/cards/{cardId}: deckId, front, back, easeFactor,
+    //   intervalDays, repetitions, dueAt, deleting, createdAt, updatedAt.
+    // users/{uid}/decks/{deckId}/cards/{cardId}/reviews/{reviewId}: grade, reviewedAt.
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function hasExactFields(data, fields) {
+      return data.keys().hasAll(fields) && data.keys().hasOnly(fields);
+    }
+
+    function hasValidTimestamps(data) {
+      return data.createdAt is timestamp && data.updatedAt is timestamp;
+    }
+
+    function hasServerTimestamps(data) {
+      return data.createdAt == request.time && data.updatedAt == request.time;
+    }
+
+    function hasValidProfile(data) {
+      return hasExactFields(data, ['displayName', 'createdAt', 'updatedAt'])
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 80
+        && hasValidTimestamps(data);
+    }
+
+    function hasValidDeck(data) {
+      return hasExactFields(data, [
+          'name', 'description', 'deleting', 'createdAt', 'updatedAt'
+        ])
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 120
+        && data.description is string
+        && data.description.size() <= 1000
+        && data.deleting is bool
+        && hasValidTimestamps(data);
+    }
+
+    function hasValidCard(data, deckId) {
+      return hasExactFields(data, [
+          'deckId', 'front', 'back', 'easeFactor', 'intervalDays',
+          'repetitions', 'dueAt', 'deleting', 'createdAt', 'updatedAt'
+        ])
+        && data.deckId == deckId
+        && data.front is string
+        && data.front.size() >= 1
+        && data.front.size() <= 5000
+        && data.back is string
+        && data.back.size() >= 1
+        && data.back.size() <= 5000
+        && data.easeFactor is number
+        && data.easeFactor >= 1.3
+        && data.easeFactor <= 5
+        && data.intervalDays is int
+        && data.intervalDays >= 0
+        && data.intervalDays <= 36500
+        && data.repetitions is int
+        && data.repetitions >= 0
+        && data.repetitions <= 10000
+        && data.dueAt is timestamp
+        && data.deleting is bool
+        && hasValidTimestamps(data);
+    }
+
+    function hasValidReview(data) {
+      return hasExactFields(data, ['grade', 'reviewedAt'])
+        && data.grade is int
+        && data.grade >= 0
+        && data.grade <= 5
+        && data.reviewedAt is timestamp
+        && data.reviewedAt == request.time;
+    }
+
+    function deckAllowsWrites(uid, deckId) {
+      let deckPath = /databases/$(database)/documents/users/$(uid)/decks/$(deckId);
+      return exists(deckPath) && get(deckPath).data.deleting == false;
+    }
+
+    function cardAllowsReviews(uid, deckId, cardId) {
+      let deckPath = /databases/$(database)/documents/users/$(uid)/decks/$(deckId);
+      let cardPath = /databases/$(database)/documents/users/$(uid)/decks/$(deckId)/cards/$(cardId);
+      return exists(deckPath)
+        && get(deckPath).data.deleting == false
+        && exists(cardPath)
+        && get(cardPath).data.deckId == deckId
+        && get(cardPath).data.deleting == false;
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && hasValidProfile(request.resource.data)
+        && hasServerTimestamps(request.resource.data);
+      allow update: if isOwner(uid)
+        && hasValidProfile(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+
+      match /decks/{deckId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && hasValidDeck(request.resource.data)
+          && request.resource.data.deleting == false
+          && hasServerTimestamps(request.resource.data);
+        allow update: if isOwner(uid)
+          && hasValidDeck(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time
+          && (!resource.data.deleting || request.resource.data.deleting)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'description', 'deleting', 'updatedAt']);
+        allow delete: if isOwner(uid);
+
+        match /cards/{cardId} {
+          allow read: if isOwner(uid);
+          allow create: if isOwner(uid)
+            && deckAllowsWrites(uid, deckId)
+            && hasValidCard(request.resource.data, deckId)
+            && request.resource.data.deleting == false
+            && hasServerTimestamps(request.resource.data)
+            && request.resource.data.dueAt == request.time;
+          allow update: if isOwner(uid)
+            && deckAllowsWrites(uid, deckId)
+            && hasValidCard(request.resource.data, deckId)
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.updatedAt == request.time
+            && (!resource.data.deleting || request.resource.data.deleting)
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly([
+                'front', 'back', 'easeFactor', 'intervalDays', 'repetitions',
+                'dueAt', 'deleting', 'updatedAt'
+              ]);
+          allow delete: if isOwner(uid);
+
+          match /reviews/{reviewId} {
+            allow read: if isOwner(uid);
+            allow create: if isOwner(uid)
+              && cardAllowsReviews(uid, deckId, cardId)
+              && hasValidReview(request.resource.data);
+            allow update: if false;
+            allow delete: if isOwner(uid);
+          }
+        }
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
