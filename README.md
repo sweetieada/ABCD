@@ -63,12 +63,12 @@ Run checks:
 npm run lint
 npm run typecheck
 npm run test
+npm run test:all
 npm run test:rules
 ```
 
-`npm test` starts a local Firestore Emulator and runs all tests, including the
-security rules tests, so no tests are silently skipped. `npm run test:rules`
-runs only the rules tests, while `npm run test:unit` runs the schema unit tests
-without an emulator. Emulator tests use the demo project and do not read or
-write cloud Firebase data. Running `npm test` or `npm run test:rules` requires
-Java; using the cloud-backed app does not.
+`npm test` runs the schema unit tests without requiring Java. `npm run test:all`
+starts a local Firestore Emulator and runs all tests, including Security Rules;
+`npm run test:rules` runs only the rules tests. Emulator tests use the demo
+project and do not read or write cloud Firebase data. Running `npm run test:all`
+or `npm run test:rules` requires Java; using the cloud-backed app does not.

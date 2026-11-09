@@ -10,8 +10,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "npx -y firebase-tools@latest --config firebase.test.json emulators:exec --project demo-memocard --only firestore \"vitest run\"",
-    "test:unit": "vitest run tests/schemas.test.ts",
+    "test": "vitest run tests/schemas.test.ts",
+    "test:all": "npx -y firebase-tools@latest --config firebase.test.json emulators:exec --project demo-memocard --only firestore \"vitest run\"",
     "test:rules": "npx -y firebase-tools@latest --config firebase.test.json emulators:exec --project demo-memocard --only firestore \"vitest run tests/firestore.rules.test.ts\""
   },
   "dependencies": {

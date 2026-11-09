@@ -20,7 +20,10 @@ const batchSize = 450;
 function decodeDeck(id: string, value: unknown): Deck {
   const parsed = storedDeckSchema.safeParse(value);
   if (!parsed.success) {
-    throw new Error("資料庫中的牌組資料格式不正確。");
+    const invalidFields = [...new Set(
+      parsed.error.issues.map((issue) => issue.path.join(".") || "document"),
+    )];
+    throw new Error(`牌組資料格式不正確（文件 ${id}；欄位：${invalidFields.join(", ")}）。`);
   }
 
   return {
@@ -40,7 +43,9 @@ function decksQuery(uid: string) {
 
 export async function listDecks(uid: string) {
   const snapshot = await getDocs(decksQuery(uid));
-  return snapshot.docs.map((item) => decodeDeck(item.id, item.data()));
+  return snapshot.docs.map((item) =>
+    decodeDeck(item.id, item.data({ serverTimestamps: "estimate" })),
+  );
 }
 
 export function subscribeToDecks(
@@ -50,7 +55,17 @@ export function subscribeToDecks(
 ) {
   return onSnapshot(
     decksQuery(uid),
-    (snapshot) => onChange(snapshot.docs.map((item) => decodeDeck(item.id, item.data()))),
+    (snapshot) => {
+      try {
+        onChange(
+          snapshot.docs.map((item) =>
+            decodeDeck(item.id, item.data({ serverTimestamps: "estimate" })),
+          ),
+        );
+      } catch (error) {
+        onError(error instanceof Error ? error : new Error("無法讀取牌組資料。"));
+      }
+    },
     onError,
   );
 }
